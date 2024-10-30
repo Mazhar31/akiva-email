@@ -586,8 +586,8 @@ async def email_chat(session_id, email):
                 )
 
             # Delay to avoid overloading the server with frequent checks
-            # time.sleep(10)
-            await asyncio.sleep(10)
+                time.sleep(10)
+            # await asyncio.sleep(10)
 
 # Run the email chat system
 # if __name__ == "__main__":
