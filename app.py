@@ -534,7 +534,7 @@ def send_email(subject, body, to_email):
 
 
 # Function to process a single email
-def process_email(email_data):
+async def process_email(email_data):
     from_email, subject, email_body, session_id = email_data
     print(f"Processing email from: {from_email}")
     print(f"Subject: {subject}")
@@ -573,7 +573,7 @@ async def email_chat(session_id, email):
             print("Checking for new emails...")
 
             # Get all unread emails from the tracked senders within the last 3 minutes
-            unread_emails = get_unread_emails(session_id, sent_emails)
+            unread_emails = await get_unread_emails(session_id, sent_emails)
 
             if unread_emails:
                 # Process emails in parallel
@@ -586,8 +586,8 @@ async def email_chat(session_id, email):
                 )
 
             # Delay to avoid overloading the server with frequent checks
-                time.sleep(10)
-            # await asyncio.sleep(10)
+            # time.sleep(10)
+            await asyncio.sleep(10)
 
 # Run the email chat system
 # if __name__ == "__main__":
