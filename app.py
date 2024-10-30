@@ -33,7 +33,7 @@ from dotenv import load_dotenv
 import multiprocessing
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
-
+from concurrent.futures import ThreadPoolExecutor
 
 
 app = FastAPI()
@@ -366,9 +366,15 @@ def send_greeting_email(to_email, sent_emails):
         print(f"Failed to send greeting email: {e}")
 
 # Function to send greeting emails to a list of recipients
-def send_greetings_to_recipients(recipient_emails, sent_emails):
-    with multiprocessing.Pool() as pool:
-        pool.starmap(send_greeting_email, [(email, sent_emails) for email in recipient_emails])
+async def send_greetings_to_recipients(recipient_emails, sent_emails):
+    # with multiprocessing.Pool() as pool:
+    #     pool.starmap(send_greeting_email, [(email, sent_emails) for email in recipient_emails])
+
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as executor:
+        await asyncio.gather(
+            *[loop.run_in_executor(executor, send_greeting_email, email, sent_emails) for email in recipient_emails]
+        )
 
 # Function to get the latest email body and filter by the last 30 minutes in local time
 def get_unread_emails(session_id, sent_emails):
@@ -554,13 +560,13 @@ def process_email(email_data):
     send_email(f"Re: {subject}", bot_message, from_email)
 
 
-def email_chat(session_id, email):
+async def email_chat(session_id, email):
     with multiprocessing.Manager() as manager:
         sent_emails = manager.list()
 
         # Step 1: Send an initial greeting to a list of users
         recipient_emails = email  # Add more emails as needed
-        send_greetings_to_recipients(recipient_emails, sent_emails)
+        await send_greetings_to_recipients(recipient_emails, sent_emails)
 
         # Step 2: Begin the chat loop
         while True:
@@ -571,11 +577,17 @@ def email_chat(session_id, email):
 
             if unread_emails:
                 # Process emails in parallel
-                with multiprocessing.Pool() as pool:
-                    pool.map(process_email, unread_emails)
+                # with multiprocessing.Pool() as pool:
+                #     pool.map(process_email, unread_emails)
+                with ThreadPoolExecutor() as executor:
+                    loop = asyncio.get_event_loop()
+                    await asyncio.gather(
+                        *[loop.run_in_executor(executor, process_email, email) for email in unread_emails]
+                )
 
             # Delay to avoid overloading the server with frequent checks
-            time.sleep(10)
+            # time.sleep(10)
+            await asyncio.sleep(10)
 
 # Run the email chat system
 # if __name__ == "__main__":
