@@ -377,7 +377,7 @@ async def send_greetings_to_recipients(recipient_emails, sent_emails):
         )
 
 # Function to get the latest email body and filter by the last 30 minutes in local time
-def get_unread_emails(session_id, sent_emails):
+async def get_unread_emails(session_id, sent_emails):
     try:
         mail = imaplib.IMAP4_SSL(IMAP_SERVER)
         mail.login(EMAIL_USER, EMAIL_PASS)
